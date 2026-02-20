@@ -1,7 +1,7 @@
-DNS Security: From Exploitation to Enterprise Protection
+#DNS Security: From Exploitation to Enterprise Protection
 This repository presents a comprehensive study on DNS security, covering vulnerabilities, cryptographic defenses, and high-availability infrastructure. The project is divided into three progressive scenarios that evolve a standard network into a secure, redundant enterprise environment.
 
-Scenario 1: Man-in-the-Middle Attack and Credential Harvesting
+##Scenario 1: Man-in-the-Middle Attack and Credential Harvesting
 The first scenario demonstrates the fundamental vulnerability of the Domain Name System: the lack of origin authenticity. In a standard DNS exchange, a client or resolver accepts the first response that matches the query ID, regardless of its source.
 Topology Overview
 The network consists of a University LAN (A) containing the legitimate web portal and DNS server, an intermediate backbone, and a remote User LAN (D) connected via a resolver.
@@ -10,8 +10,12 @@ Execution of the Attack
 The attack is performed at the routing level on node r2. It combines traffic manipulation and packet injection:
 Traffic Interference: To ensure the victim accepts the forged response, legitimate traffic from the university DNS server is suppressed using firewall rules on the gateway.
 
-iptables -A FORWARD -d 110.0.0.10 -p udp --dport 53 -j DROP
-
+<pre>
+    '''bash
+    iptables -A FORWARD -d 110.0.0.10 -p udp --dport 53 -j DROP
+    '''
+<\pre>
+    
 Packet Injection: A sniffing engine monitors the network for queries directed to uniroma3.it. Upon detection, it instantly generates a forged DNS response. The response "steals" the identity of the legitimate server by spoofing its source IP and matching the original transaction ID.
 
 ether_layer = Ether(dst=pkt[Ether].src, src=pkt[Ether].dst)
@@ -21,7 +25,7 @@ dns_layer = DNS(id=pkt[DNS].id, qr=1, aa=1, qd=pkt[DNS].qd, an=DNSRR(rrname=qnam
 
 Phishing Logic: The victim is redirected to a malicious "Evil" server. This server hosts a clone of the student portal. When the user enters their credentials, a PHP backend logs the data and performs a seamless Auto-POST redirection to the real university portal. This ensures the user remains unaware of the compromise.
 
-Scenario 2: Defense via DNSSEC Implementation
+##Scenario 2: Defense via DNSSEC Implementation
 The second scenario introduces DNS Security Extensions (DNSSEC) to mitigate spoofing attacks through cryptographic validation.
 The Chain of Trust
 Integrity is guaranteed by signing DNS zones with a hierarchy of keys. Each zone provides a "proof of origin" to its parent:
@@ -39,7 +43,7 @@ When a response is received, the resolver verifies the digital signature (RRSIG)
 Impact on the Attack
 When the attacker attempts to inject a forged IP address, they cannot produce a valid cryptographic signature for that record. The resolver detects the signature mismatch and discards the response, returning a SERVFAIL to the user's browser, effectively blocking the phishing attempt.
 
-Scenario 3: Enterprise Redundancy and High Availability
+##Scenario 3: Enterprise Redundancy and High Availability
 The final scenario focuses on infrastructure resilience, ensuring that security policies (DNSSEC) remain active even during hardware or link failures.
 Topology Evolution
 The backbone is expanded with a secondary path (LAN G) and an additional router (r3). Backup DNS authorities are introduced for both the Root and the University domains.
