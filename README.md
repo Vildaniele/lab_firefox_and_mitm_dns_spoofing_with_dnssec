@@ -38,11 +38,12 @@ IT Zone (.it): Its public key is hashed and stored in the Root zone as a DS (Del
 University Zone (uniroma3.it): Its public key is hashed and stored in the IT zone.
 Validating Resolver Mechanism
 The resolver pc4 is configured with a Trust Anchor, which is the public key of the Root server.
+<pre>
 
-trust-anchors {
-    "." static-key 257 3 13 "wu8ma9EvxFhISJabP7+JOBwn/geejdepyV4WVi5Uv0Tn80KNQfpAuDeNhKEunT5pmUXjIx/rkdOiK/xApdQNEg==";
-};
-
+    trust-anchors {
+        "." static-key 257 3 13 "wu8ma9EvxFhISJabP7+JOBwn/geejdepyV4WVi5Uv0Tn80KNQfpAuDeNhKEunT5pmUXjIx/rkdOiK/xApdQNEg==";
+    };
+</pre>
 When a response is received, the resolver verifies the digital signature (RRSIG) using the corresponding DNSKEY. It follows the chain up to the trust anchor.
 Impact on the Attack
 When the attacker attempts to inject a forged IP address, they cannot produce a valid cryptographic signature for that record. The resolver detects the signature mismatch and discards the response, returning a SERVFAIL to the user's browser, effectively blocking the phishing attempt.
