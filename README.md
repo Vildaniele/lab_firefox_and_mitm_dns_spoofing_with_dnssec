@@ -1,5 +1,5 @@
 # DNS Security: From Exploitation to Enterprise Protection
-This repository presents a comprehensive study on DNS security, covering vulnerabilities, cryptographic defenses, and high-availability infrastructure. The project is divided into three progressive scenarios that evolve a standard network into a secure, redundant enterprise environment.
+This repository presents a comprehensive study on DNS security. The project is divided into three progressive scenarios that evolve a standard network into a secure, redundant environment.
 
 ## Scenario 1: Man-in-the-Middle Attack and Credential Harvesting
 The first scenario demonstrates the fundamental vulnerability of the Domain Name System: the lack of origin authenticity. In a standard DNS exchange, a client or resolver accepts the first response that matches the query ID, regardless of its source.
