@@ -13,9 +13,7 @@ The attack is performed at the routing level on node r2. It combines traffic man
 Traffic Interference: To ensure the victim accepts the forged response, legitimate traffic from the university DNS server is suppressed using firewall rules on the gateway.
 
 <pre> 
-    bash '''
     iptables -A FORWARD -d 110.0.0.10 -p udp --dport 53 -j DROP 
-    '''
 </pre>
     
 Packet Injection: A sniffing engine monitors the network for queries directed to uniroma3.it. Upon detection, it instantly generates a forged DNS response. The response "steals" the identity of the legitimate server by spoofing its source IP and matching the original transaction ID.
