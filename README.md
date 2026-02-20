@@ -1,80 +1,91 @@
-# DNS Security Evolution: From MITM Spoofing to DNSSEC & Redundancy
+# DNS Security Deep-Dive: From MITM Spoofing to DNSSEC & Redundancy
 
-This repository contains a comprehensive set of network security laboratories developed using **Kathara**. The project simulates the evolutionary path of a DNS infrastructure: starting from a vulnerable network prone to DNS Spoofing and Phishing, implementing modern cryptographic defenses via **DNSSEC**, and concluding with an enterprise-grade setup featuring **Full Redundancy** and Master/Slave synchronization.
+[![Framework: Kathara](https://img.shields.io/badge/Framework-Kathara-orange)](https://www.kathara.org/)
+[![Tool: BIND9](https://img.shields.io/badge/Service-BIND9-blue)](https://www.isc.org/bind/)
+[![Tool: Scapy](https://img.shields.io/badge/Tool-Scapy-brightgreen)](https://scapy.net/)
 
-## 📌 Project Overview
-The objective of these labs is to analyze the critical role of DNS security in modern networking. We simulate a realistic interaction between a client (Firefox) and a University web portal (`uniroma3.it`), demonstrating how vulnerabilities can be exploited and subsequently mitigated.
+This repository contains a comprehensive three-stage laboratory developed for the **Computer Networks Security** course. It provides a complete hands-on experience on DNS vulnerabilities, cryptographic defenses (DNSSEC), and enterprise-level infrastructure redundancy.
 
-### Key Learning Objectives
-- **Protocol Analysis**: Understanding standard DNS vs. DNSSEC.
-- **Offensive Security**: Implementing Man-in-the-Middle (MITM) attacks using Scapy.
-- **Defensive Configuration**: Establishing a complete DNSSEC Chain of Trust (Root -> IT -> Uniroma3).
-- **High Availability**: Configuring BIND9 zone transfers (AXFR) and redundant backbone routing.
+> **Note**: This README is designed to provide all the technical details contained in the official laboratory slides, making it a standalone guide for the entire project.
 
 ---
 
-## 🌐 Network Architecture
-The infrastructure is composed of several logical segments:
-- **University LAN**: Legitimate servers (`uniromatre`) and Authoritative DNS (`dnsuni`).
-- **Resolver LAN**: A local DNS Resolver (`pc4`) serving the end-user.
-- **Backbone**: Multi-homed core network with redundant paths (LAN C and LAN G).
-- **Attacker Segment**: The `evil` network used to host phishing pages and launch injection scripts.
+## 🔬 Milestone 1 & 2: Basic Lab & DNSSEC Defense
+### Overview
+In the initial stages, the lab focuses on the core vulnerability of the DNS protocol and its resolution through DNSSEC. The network includes a University LAN, an external resolver, and an attacker's "Evil" network.
 
----
+#### Network Topology (Basic)
+![Basic Topology](images/topology_basic.png)
 
-## 🔬 Scenario Details
-
-### 1. Basic DNS MITM & Phishing (The Vulnerability)
-*Folder: `01-basic-mitm/`*
+### 1. DNS Spoofing & Phishing (Offensive)
 - **The Threat**: Lack of origin authentication in standard DNS.
-- **The Attack**: Router `r2` intercepts DNS queries for `uniroma3.it`. A Scapy-based script (`r2_attack.py`) sends a forged response pointing to the `evil` server.
-- **Phishing Mechanism**: The `evil` server hosts a cloned portal. Once credentials (Matricola/Password) are entered, the PHP backend logs them and performs a **Seamless Auto-POST** to the real university site, making the attack invisible to the user.
+- **The Attack**: Router `r2` uses a Scapy-based script (`r2_attack.py`) to intercept DNS queries. It sends a forged response pointing to the `evil` server.
+- **Phishing Mechanism**: The `evil` server hosts a cloned student portal. Once credentials are entered, the PHP backend logs them and performs a **Seamless Auto-POST** to the real university site to remain undetected.
 
-### 2. DNSSEC Defense (The Mitigation)
-*Folder: `02-dnssec-defense/`*
-- **The Defense**: Implementation of **DNSSEC** (Domain Name System Security Extensions).
-- **Mechanism**: All zones are signed using BIND9's `dnssec-policy`. The resolver (`pc4`) is configured as a **Validating Resolver** with a static Trust Anchor for the Root.
-- **Outcome**: When the attacker attempts to inject the forged DNS record, the signature verification fails. The resolver returns a `SERVFAIL` to the client, preventing access to the malicious site.
-
-### 3. Enterprise Redundancy (High Availability)
-*Folder: `03-full-redundancy/`*
-- **The Goal**: Service resilience and reliability.
-- **Configuration**:
-    - **Master/Slave DNS**: `dnsuni` (Master) and `dnsuni2` (Slave) use `NOTIFY` and `AXFR` for zone synchronization.
-    - **Redundant Root**: Multiple root hints configured on the resolver.
-    - **Backbone Failover**: Integration of router `r3` and a secondary backbone path (LAN G) to ensure connectivity even during link failure.
-- **Outcome**: A robust infrastructure that maintains both high security (DNSSEC) and high availability.
+### 2. DNSSEC Implementation (Defensive)
+- **The Mitigation**: Establishing a **Chain of Trust** (Root -> .it -> .uniroma3.it).
+- **Validation**: The resolver (`pc4`) is configured to verify signatures. When the attacker tries to inject a fake record, the signature verification fails, and the resolver returns a `SERVFAIL` to the client.
 
 ---
 
-## 🚀 How to Run
+## 🏢 Milestone 3: Full Redundancy & Enterprise Setup
+### Overview
+The final stage evolves the network into a highly available enterprise infrastructure. It introduces backup DNS authorities and redundant physical paths.
 
-### Prerequisites
-- [Kathara Framework](https://www.kathara.org/)
-- [Docker](https://www.docker.com/)
+#### Network Topology (Redundant)
+![Redundant Topology](images/topology_redundancy.png)
 
-### Deployment
-1. Navigate to the desired scenario directory:
-   ```bash
-   cd 03-full-redundancy
-Start the laboratory:
+### Key Features of the Redundant Setup:
+- **Master/Slave DNS**: 
+    - `dnsroot2` acts as a backup for the Root.
+    - `dnsuni2` acts as a slave for the University domain.
+- **Zone Transfers (AXFR)**: Implementation of automated synchronization between Master and Slave nodes using `NOTIFY` and `AXFR` protocols.
+- **Backbone Failover**: A secondary backbone path (LAN G) and a third router (`r3`) ensure that the network remains functional even if a primary link or router fails.
+
+---
+
+## 🚀 Step-by-Step Execution Guide
+
+### 1. Start the Lab
+```bash
+cd 03-full-redundancy
+kathara lstart
+2. Launch the Attack (Scenario 1 & 2)
+Inside the r2 terminal:
 code
 Bash
-kathara lstart
-Access the nodes:
-Firefox (Client): Open your browser at http://localhost:3001
-Wireshark: Open http://localhost:3000 to monitor traffic on the bridged interfaces.
-🛠 Technical Stack
-DNS Suite: BIND9 (ver. 9.16)
-Web Stack: Apache2 + PHP 7.4
-Attack Scripting: Python 3 + Scapy
-Traffic Capture: Wireshark (containerized)
-Client: Linuxserver/Firefox (Web-based VNC)
-📝 Implementation Notes
-DNSSEC Signing: Zones are signed dynamically. The parent-child relationship (DS records) is established during the .startup phase using dnssec-dsfromkey.
-Phishing Logic: The evil/index.php is designed to be a "wrapper" that captures data before forwarding the user to the legitimate destination.
-Routing: Static routing is implemented across all routers to simulate a multi-autonomous system environment.
-⚖️ License & Credits
-This lab is for educational purposes only.
-Style inspired by: RicGobs
-Author: [Your Name/Handle]
+python3 r2_attack.py
+Browse to www.uniroma3.it from pc3 (localhost:3001).
+Without DNSSEC: You will be redirected to the phishing page.
+With DNSSEC: The browser will show a "Server Not Found" error, protecting the user.
+3. Verify Redundancy (Scenario 3)
+Check if the Slave DNS has successfully received the zone from the Master:
+code
+Bash
+# On dnsuni2 terminal
+ls /var/cache/bind/db.uniroma3.transfered
+⚙️ Technical Deep-Dive
+The Scapy Attack Logic
+The script on r2 reverse-engineers the incoming DNS packet to forge a perfect replica with a malicious payload:
+code
+Python
+# Create the response by stealing the real server's identity
+ip_layer = IP(src=pkt[IP].dst, dst=pkt[IP].src)
+udp_layer = UDP(sport=pkt[UDP].dport, dport=pkt[UDP].sport)
+dns_layer = DNS(id=pkt[DNS].id, qr=1, aa=1, rdata=EVIL_IP)
+Automated DNSSEC Signing
+The lab uses a dynamic logic in .startup files to build the Chain of Trust automatically:
+code
+Bash
+# dnsit.startup waits for the child (uniroma3) to be ready, then requests its DS record
+while ! dig @110.0.0.10 uniroma3.it DNSKEY | grep -q "257 3 13"; do sleep 2; done
+dig @110.0.0.10 uniroma3.it DNSKEY | dnssec-dsfromkey -f - uniroma3.it >> /etc/bind/db.it
+🛠 Prerequisites & Tools
+Kathara Framework: Network virtualization.
+BIND9: Authoritative and Recursive DNS services.
+Apache2 + PHP: Web hosting and credential harvesting.
+Wireshark: Real-time traffic analysis (accessible at localhost:3000).
+📝 Credits
+Course: Computer Networks Security - Roma Tre University.
+Original Slides: D. Villa.
+Framework: Kathara (Computer Networks Research Group).
