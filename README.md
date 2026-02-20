@@ -8,7 +8,7 @@ The network consists of a University LAN (A) containing the legitimate web porta
 
 ![alt text](images/topology_basic.png)
 
-Execution of the Attack
+### Execution of the Attack
 The attack is performed at the routing level on node r2. It combines traffic manipulation and packet injection:
 Traffic Interference: To ensure the victim accepts the forged response, legitimate traffic from the university DNS server is suppressed using firewall rules on the gateway.
 
@@ -31,12 +31,12 @@ Phishing Logic: The victim is redirected to a malicious "Evil" server. This serv
 
 ## Scenario 2: Defense via DNSSEC Implementation
 The second scenario introduces DNS Security Extensions (DNSSEC) to mitigate spoofing attacks through cryptographic validation.
-The Chain of Trust
+### The Chain of Trust
 Integrity is guaranteed by signing DNS zones with a hierarchy of keys. Each zone provides a "proof of origin" to its parent:
-Root Zone (.): Signed by the Root Authority.
-IT Zone (.it): Its public key is hashed and stored in the Root zone as a DS (Delegation Signer) record.
-University Zone (uniroma3.it): Its public key is hashed and stored in the IT zone.
-Validating Resolver Mechanism
+- Root Zone (.): Signed by the Root Authority.
+- IT Zone (.it): Its public key is hashed and stored in the Root zone as a DS (Delegation Signer) record.
+- University Zone (uniroma3.it): Its public key is hashed and stored in the IT zone.
+### Validating Resolver Mechanism
 The resolver pc4 is configured with a Trust Anchor, which is the public key of the Root server.
 <pre>
 
@@ -45,7 +45,7 @@ The resolver pc4 is configured with a Trust Anchor, which is the public key of t
     };
 </pre>
 When a response is received, the resolver verifies the digital signature (RRSIG) using the corresponding DNSKEY. It follows the chain up to the trust anchor.
-Impact on the Attack
+### Impact on the Attack
 When the attacker attempts to inject a forged IP address, they cannot produce a valid cryptographic signature for that record. The resolver detects the signature mismatch and discards the response, returning a SERVFAIL to the user's browser, effectively blocking the phishing attempt.
 
 ## Scenario 3: Enterprise Redundancy and High Availability
@@ -55,33 +55,34 @@ The backbone is expanded with a secondary path (LAN G) and an additional router 
 
 ![alt text](images/topology_redundancy.png)
 
-High Availability Features
+### High Availability Features
 DNS Master/Slave Synchronization: Secondary servers (dnsroot2 and dnsuni2) are configured as slaves. They maintain an exact copy of the signed zones through automated Zone Transfers.
-
-zone "uniroma3.it" {
-    type slave;
-    file "/var/cache/bind/db.uniroma3.transfered";
-    masters { 110.0.0.10; };
-};
-
+<pre>
+    zone "uniroma3.it" {
+        type slave;
+        file "/var/cache/bind/db.uniroma3.transfered";
+        masters { 110.0.0.10; };
+    };
+</pre>
 Master Propagation: The master server uses the NOTIFY protocol to alert slaves of any updates, trig
-
-allow-transfer { 100.0.75.10; };
-also-notify { 100.0.75.10; };
+<pre>
+    allow-transfer { 100.0.75.10; };
+    also-notify { 100.0.75.10; };
+</pre>
 
 Routing Failover: Static routes and redundant backbone connections ensure that if the primary path through r1-r2 is interrupted, the resolver can still reach the slave authorities through the secondary path via r3.
 
-Laboratory Environment
-Core Components
+## Laboratory Environment
+### Core Components
 BIND9: Used for all DNS authorities and the recursive validating resolver.
 Apache2/PHP: Used for both the legitimate university portal and the phishing site.
 Scapy: Used for custom packet crafting and network injection.
 Kathara: Virtualization engine for node and collision domain management.
 
-Monitoring
+### Monitoring
 Traffic analysis is conducted via a containerized Wireshark instance. It allows for the observation of DNSSEC flags (DO bit) and the verification of the AD (Authenticated Data) flag in successful secure resolutions.
 
-Credits
+## Credits
 This project is based on the educational materials from Roma Tre University (Computer Networks Research Group).
 Course: Computer Networks Security - Roma Tre University
 Original Content: D. Villa
